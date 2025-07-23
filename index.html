@@ -2,71 +2,79 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>สรุปขั้นตอน HW05 - Superset + ClickHouse</title>
+  <title>HW05 - Superset + ClickHouse</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      line-height: 1.7;
-      padding: 30px;
-      background: #f9f9f9;
-      color: #222;
+      font-family: "Segoe UI", sans-serif;
+      background-color: #f9f9f9;
+      margin: 40px;
+      color: #2c3e50;
     }
     h1, h2 {
-      color: #2a5d84;
-    }
-    code {
-      background-color: #e8e8e8;
-      padding: 2px 4px;
-      border-radius: 4px;
+      color: #00796B;
     }
     pre {
-      background: #eee;
-      padding: 10px;
+      background-color: #eeeeee;
+      padding: 12px;
+      border-left: 5px solid #26a69a;
       overflow-x: auto;
+    }
+    code {
+      font-family: Consolas, monospace;
+    }
+    .box {
+      background: white;
+      padding: 25px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      border-radius: 10px;
+    }
+    ul {
+      line-height: 1.8;
+    }
+    a {
+      color: #0288d1;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
-  <h1>HW05 - Superset & ClickHouse Integration</h1>
+  <div class="box">
+    <h1>HW05 - Superset & ClickHouse Integration</h1>
 
-  <h2>1. ติดตั้ง Superset บน WSL</h2>
-  <pre><code>
-sudo apt update && sudo apt install -y build-essential libssl-dev libffi-dev python3-dev python3-pip python3-venv libsasl2-dev libldap2-dev libpq-dev
+    <h2>1. ติดตั้ง Superset บน WSL</h2>
+    <pre><code>sudo apt update && sudo apt install -y build-essential libssl-dev libffi-dev python3-dev python3-pip python3-venv libsasl2-dev libldap2-dev libpq-dev
 
 python3 -m venv superset-env
 source superset-env/bin/activate
 
 pip install --upgrade pip setuptools wheel
 pip install apache-superset==3.0.2
-pip install marshmallow==3.19.0
-  </code></pre>
+pip install marshmallow==3.19.0</code></pre>
 
-  <h2>2. สร้างไฟล์ <code>superset_config.py</code></h2>
-  <pre><code>
-SECRET_KEY = 'your_random_secret_key'
-  </code></pre>
-  <p>และตั้งค่า environment variable:</p>
-  <pre><code>
-export FLASK_APP=superset
-export SUPERSET_CONFIG_PATH=~/superset_config.py
-  </code></pre>
+    <h2>2. ตั้งค่า Secret Key</h2>
+    <p>สร้างไฟล์ <code>superset_config.py</code> และใส่:</p>
+    <pre><code>SECRET_KEY = 'your_random_secret_key'</code></pre>
+    <p>แล้วตั้งค่า environment:</p>
+    <pre><code>export FLASK_APP=superset
+export SUPERSET_CONFIG_PATH=~/superset_config.py</code></pre>
 
-  <h2>3. Setup Superset</h2>
-  <pre><code>
-superset db upgrade
+    <h2>3. Setup และรัน Superset</h2>
+    <pre><code>superset db upgrade
 superset init
 superset fab create-admin
-superset run -p 8088
-  </code></pre>
-  <p>เข้าใช้งานที่ <code>http://localhost:8088</code></p>
+superset run -p 8088</code></pre>
+    <p>เข้าใช้งานได้ที่ <code>http://localhost:8088</code></p>
 
-  <h2>4. ติดตั้ง ClickHouse (ผ่าน Docker)</h2>
-  <pre><code>
-docker run -d --name clickhouse-server -p 9000:9000 -p 8123:8123 yandex/clickhouse-server
-  </code></pre>
+    <h2>4. ติดตั้ง ClickHouse บน WSL</h2>
+    <p>ทำตามคำแนะนำใน <a href="https://clickhouse.com/docs/en/getting-started/install">ClickHouse Installation Guide</a> โดยใช้ APT:</p>
+    <pre><code>sudo apt-key adv --keyserver keyserver.ubuntu.com --recv E0C56BD4
+echo "deb http://repo.clickhouse.com/deb/stable/ main/" | sudo tee /etc/apt/sources.list.d/clickhouse.list
+sudo apt update
+sudo apt install clickhouse-server clickhouse-client
+sudo service clickhouse-server start</code></pre>
 
-  <h2>5. สร้างตารางและนำเข้าข้อมูลจาก HW04</h2>
-  <pre><code>
+    <h2>5. สร้างตารางและนำเข้าข้อมูลจาก HW04</h2>
+    <pre><code>clickhouse-client --query="
 CREATE TABLE students (
     id UInt32,
     name String,
@@ -75,21 +83,27 @@ CREATE TABLE students (
 ORDER BY id;
 
 INSERT INTO students VALUES (1, 'Alice', 89.5), (2, 'Bob', 76.0);
-  </code></pre>
+"</code></pre>
 
-  <h2>6. เชื่อมต่อ Superset กับ ClickHouse</h2>
-  <p>ในหน้า UI Superset เพิ่ม Database ด้วย URI:</p>
-  <pre><code>clickhouse+native://default:@localhost:9000/default</code></pre>
+    <h2>6. เชื่อม Superset กับ ClickHouse</h2>
+    <p>ไปที่ Superset UI → Database → + Database</p>
+    <p>ใส่ URI:</p>
+    <pre><code>clickhouse+native://default:@localhost:9000/default</code></pre>
 
-  <h2>7. สร้าง Dashboard จาก ClickHouse</h2>
-  <p>สร้าง Dataset → Explore → Chart → Dashboard</p>
-  <p>สามารถบันทึกภาพผลงานเพื่อแนบใน README ได้</p>
+    <h2>7. สร้าง Dashboard</h2>
+    <ul>
+      <li>สร้าง Dataset จากตาราง ClickHouse</li>
+      <li>ใช้ Explore เพื่อสร้าง Chart</li>
+      <li>รวมหลาย Chart เป็น Dashboard</li>
+      <li>แสดงผลพร้อม capture หน้าจอประกอบใน README</li>
+    </ul>
 
-  <h2>8. สรุป</h2>
-  <ul>
-    <li>ติดตั้งและตั้งค่า Superset สำเร็จ</li>
-    <li>นำข้อมูลจาก HW4 เข้า ClickHouse</li>
-    <li>สร้าง Dashboard บน Superset ได้สำเร็จ</li>
-  </ul>
+    <h2>8. สรุป</h2>
+    <ul>
+      <li>ติดตั้ง Superset และ ClickHouse บน WSL สำเร็จ</li>
+      <li>สามารถเชื่อมต่อและแสดงผล Dashboard ได้</li>
+      <li>พร้อมจัดทำไฟล์รายงานประกอบ README และเว็บไซต์</li>
+    </ul>
+  </div>
 </body>
 </html>
