@@ -35,6 +35,12 @@
       color: #0288d1;
       text-decoration: none;
     }
+    img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin: 10px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
@@ -52,10 +58,9 @@ pip install apache-superset==3.0.2
 pip install marshmallow==3.19.0</code></pre>
 
     <h2>2. ตั้งค่า Secret Key</h2>
-    <p>สร้างไฟล์ <code>superset_config.py</code> และใส่:</p>
-    <pre><code>SECRET_KEY = 'your_random_secret_key'</code></pre>
-    <p>แล้วตั้งค่า environment:</p>
-    <pre><code>export FLASK_APP=superset
+    <pre><code>SECRET_KEY = 'your_random_secret_key'
+
+export FLASK_APP=superset
 export SUPERSET_CONFIG_PATH=~/superset_config.py</code></pre>
 
     <h2>3. Setup และรัน Superset</h2>
@@ -63,46 +68,36 @@ export SUPERSET_CONFIG_PATH=~/superset_config.py</code></pre>
 superset init
 superset fab create-admin
 superset run -p 8088</code></pre>
-    <p>เข้าใช้งานได้ที่ <code>http://localhost:8088</code></p>
+    <p>เมื่อเรียกใช้งาน Superset Server ได้สำเร็จ จะเห็น log ดังภาพ:</p>
+    <img src="pic1.png" alt="Superset Terminal Log">
 
     <h2>4. ติดตั้ง ClickHouse บน WSL</h2>
-    <p>ทำตามคำแนะนำใน <a href="https://clickhouse.com/docs/en/getting-started/install">ClickHouse Installation Guide</a> โดยใช้ APT:</p>
-    <pre><code>sudo apt-key adv --keyserver keyserver.ubuntu.com --recv E0C56BD4
-echo "deb http://repo.clickhouse.com/deb/stable/ main/" | sudo tee /etc/apt/sources.list.d/clickhouse.list
-sudo apt update
-sudo apt install clickhouse-server clickhouse-client
+    <pre><code>sudo apt install clickhouse-server clickhouse-client
 sudo service clickhouse-server start</code></pre>
 
-    <h2>5. สร้างตารางและนำเข้าข้อมูลจาก HW04</h2>
-    <pre><code>clickhouse-client --query="
-CREATE TABLE students (
+    <h2>5. สร้างตารางและนำเข้าข้อมูล</h2>
+    <pre><code>CREATE TABLE students (
     id UInt32,
     name String,
     score Float32
 ) ENGINE = MergeTree()
 ORDER BY id;
 
-INSERT INTO students VALUES (1, 'Alice', 89.5), (2, 'Bob', 76.0);
-"</code></pre>
+INSERT INTO students VALUES (1, 'Alice', 89.5), (2, 'Bob', 76.0);</code></pre>
 
-    <h2>6. เชื่อม Superset กับ ClickHouse</h2>
-    <p>ไปที่ Superset UI → Database → + Database</p>
-    <p>ใส่ URI:</p>
+    <h2>6. เชื่อมต่อ Superset กับ ClickHouse</h2>
+    <p>ผ่าน Superset UI → Add Database</p>
     <pre><code>clickhouse+native://default:@localhost:9000/default</code></pre>
 
-    <h2>7. สร้าง Dashboard</h2>
-    <ul>
-      <li>สร้าง Dataset จากตาราง ClickHouse</li>
-      <li>ใช้ Explore เพื่อสร้าง Chart</li>
-      <li>รวมหลาย Chart เป็น Dashboard</li>
-      <li>แสดงผลพร้อม capture หน้าจอประกอบใน README</li>
-    </ul>
+    <h2>7. สร้าง Dashboard และแสดง Chart</h2>
+    <p>สร้าง Dataset → สร้าง Bar Chart → นำไปวางใน Dashboard</p>
+    <img src="pic2.png" alt="Bar Chart Dashboard on Superset">
 
     <h2>8. สรุป</h2>
     <ul>
-      <li>ติดตั้ง Superset และ ClickHouse บน WSL สำเร็จ</li>
-      <li>สามารถเชื่อมต่อและแสดงผล Dashboard ได้</li>
-      <li>พร้อมจัดทำไฟล์รายงานประกอบ README และเว็บไซต์</li>
+      <li>ติดตั้ง Superset และ ClickHouse แบบ native บน WSL สำเร็จ</li>
+      <li>สามารถเชื่อมต่อ Superset กับ ClickHouse ได้</li>
+      <li>สร้าง Dashboard ได้พร้อมข้อมูลจาก ClickHouse</li>
     </ul>
   </div>
 </body>
